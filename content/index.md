@@ -9,4 +9,7 @@ Behold! This is JD-SSG!
 
 Thanking you please!
 
-Here is the link to [test](/test.html)
+
+### Index of files
+ [Aliens](/test.html)
+ [Character List](/char.html)

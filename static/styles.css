@@ -1,24 +1,124 @@
+/* Global Dark Mode Styles */
 body {
+    background-color: #121212;
+    color: #e0e0e0;
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
     margin: 0;
     padding: 0;
-    color: #333;
 }
 
-h1 {
-    color: #1e90ff;
-}
-
-p {
-    line-height: 1.6;
-}
-
+/* center content */
 .container {
-    width: 80%;
-    margin: auto;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
 }
+
+/* Navbar Styles */
+.navbar {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    padding: 10px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.navbar-brand a {
+    font-size: 1.5rem;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.navbar-links {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.navbar-links li {
+    margin: 0 15px;
+}
+
+.navbar-links a {
+    color: #e0e0e0;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.navbar-links a:hover {
+    color: #00aaff;
+}
+
+/* Navbar Toggle Button (for mobile view) */
+.navbar-toggle {
+    display: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+
+/* Responsive Navbar */
+@media (max-width: 768px) {
+    .navbar-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        background-color: #1e1e1e;
+        text-align: center;
+        padding: 10px 0;
+    }
+
+    .navbar-links.show {
+        display: flex;
+    }
+
+    .navbar-toggle {
+        display: block;
+    }
+
+    .navbar-links li {
+        margin: 15px 0;
+    }
+}
+
+/* Box Styles */
+.box-small, .box-medium, .box-large {
+    background-color: #333333;
+    color: #e0e0e0;
+    border-radius: 5px;
+    margin: 20px 0;
+}
+
+/* Other Global Styles */
+h1, h2, h3, h4, h5, h6 {
+    color: #e0e0e0;
+}
+
+a {
+    color: #00aaff;
+}
+
+a:hover {
+    color: #00ccff;
+}
+
 
 /* Box sizes */
 .box-small {
