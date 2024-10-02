@@ -1,8 +1,12 @@
+/* Import Montserrat and Roboto from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;500&display=swap');
+
+
 /* Global Dark Mode Styles */
 body {
     background-color: #121212;
     color: #e0e0e0;
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif; /* Set Roboto as the default font for paragraphs */
     margin: 0;
     padding: 0;
 }
@@ -14,6 +18,27 @@ body {
     padding: 20px;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif; /* Set Montserrat for headings */
+    color: #e0e0e0;
+    font-weight: 700; /* Bold headings */
+    margin: 0 0 20px 0;
+}
+
+p {
+    font-family: 'Roboto', sans-serif; /* Set Roboto for paragraphs */
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #00aaff;
+    font-family: 'Roboto', sans-serif;
+}
+
+a:hover {
+    color: #00ccff;
+}
 /* Navbar Styles */
 .navbar {
     background-color: #1e1e1e;
@@ -124,6 +149,7 @@ a:hover {
 .box-small {
     width: 200px;
     padding: 10px;
+    
 }
 
 .box-medium {
@@ -139,10 +165,12 @@ a:hover {
 /* Text sizes */
 .text-small {
     font-size: 12px;
+    letter-spacing: 0.5px; /* Increase the spacing between the letters slightly */
 }
 
 .text-medium {
     font-size: 16px;
+    
 }
 
 .text-large {

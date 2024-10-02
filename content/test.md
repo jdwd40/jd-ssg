@@ -1,6 +1,6 @@
 # My Custom Styled Document
 
-:::box size="large" textSize="small" textStyle="bold"
+:::box size="large" textSize="small"
 This is a large box with small, bold text inside it.
 :::
 
