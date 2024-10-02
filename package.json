@@ -1,0 +1,25 @@
+{
+  "name": "jd-ssg",
+  "version": "1.0.0",
+  "description": "A Simple static site generator",
+  "main": "index.js",
+  "scripts": {
+    "build": "node ssg.js",
+    "serve": "npm run build && browser-sync start --server build --files 'build/*.html, build/*.css'",
+    "watch": "nodemon -e md,hbs -w content -w templates -x 'npm run build && npm run serve'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
+    "markdown-it": "^14.1.0",
+    "markdown-it-container": "^4.0.0",
+    "nodemon": "^3.1.7"
+  },
+  "devDependencies": {
+    "browser-sync": "^3.0.3"
+  }
+}
