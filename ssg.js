@@ -1,65 +1,12 @@
 const fs = require('fs-extra');
 const path = require('path');
-const markdownIt = require('markdown-it');
-const markdownItContainer = require('markdown-it-container');
+const swc = require('@swc/core');
 const handlebars = require('handlebars');
-const matter = require('gray-matter');  // For front matter support
 
+// Directory paths
 const contentDir = path.join(__dirname, 'content');
-const templateDir = path.join(__dirname, 'templates');
 const outputDir = path.join(__dirname, 'build');
-const staticDir = path.join(__dirname, 'static');
-
-// Initialize markdown-it and add the custom "box" container plugin
-const md = markdownIt().use(markdownItContainer, 'box', {
-    validate: function(params) {
-        return params.trim().match(/^box\s+(.*)$/);
-    },
-    render: function(tokens, idx) {
-        const m = tokens[idx].info.trim().match(/^box\s+(.*)$/);
-
-        if (tokens[idx].nesting === 1) {
-            // Parse the custom box options and generate classes
-            const options = m[1];
-            const attrs = parseBoxOptions(options);
-
-            return `<div class="box ${attrs.boxClass} ${attrs.textSizeClass} ${attrs.textStyleClass}">\n`;
-        } else {
-            return '</div>\n';
-        }
-    }
-});
-
-// Helper function to parse the options (size, textSize, textStyle) and map them to CSS classes
-function parseBoxOptions(options) {
-    const attrs = {
-        boxClass: '',
-        textSizeClass: '',
-        textStyleClass: ''
-    };
-
-    // Match the size, textSize, and textStyle attributes in the command
-    const sizeMatch = options.match(/size="(.*?)"/);
-    const textSizeMatch = options.match(/textSize="(.*?)"/);
-    const textStyleMatch = options.match(/textStyle="(.*?)"/);
-
-    if (sizeMatch) {
-        const size = sizeMatch[1];
-        attrs.boxClass = `box-${size}`;
-    }
-
-    if (textSizeMatch) {
-        const textSize = textSizeMatch[1];
-        attrs.textSizeClass = `text-${textSize}`;
-    }
-
-    if (textStyleMatch) {
-        const textStyle = textStyleMatch[1];
-        attrs.textStyleClass = `text-${textStyle}`;
-    }
-
-    return attrs;
-}
+const templateDir = path.join(__dirname, 'templates');
 
 // Load Handlebars template
 async function loadTemplate() {
@@ -67,37 +14,74 @@ async function loadTemplate() {
     return handlebars.compile(templateContent);
 }
 
-// Process markdown files
-async function processMarkdownFiles(template) {
+// Compile JSX to JS using SWC
+async function compileJSX(filePath) {
+    const jsxContent = await fs.readFile(filePath, 'utf-8');
+    
+    // Transpile JSX to JavaScript
+    const { code: compiledJS } = await swc.transform(jsxContent, {
+        jsc: {
+            parser: {
+                syntax: 'ecmascript',
+                jsx: true
+            }
+        },
+        module: {
+            type: 'commonjs'  // For Node.js compatibility
+        }
+    });
+
+    // Write the transpiled JS to a temporary file
+    const jsFilePath = filePath.replace('.jsx', '.js');
+    await fs.outputFile(jsFilePath, compiledJS);
+    return jsFilePath;
+}
+
+// Process JSX files
+async function processJSXFiles(template) {
     const files = await fs.readdir(contentDir);
 
     for (const file of files) {
-        if (file.endsWith('.md')) {
-            const fileContent = await fs.readFile(path.join(contentDir, file), 'utf-8');
+        if (file.endsWith('.jsx')) {
+            const filePath = path.join(contentDir, file);
 
-            // Extract front matter (metadata) and content
-            const { data, content } = matter(fileContent);
+            // Compile the JSX to JavaScript and get the new JS file path
+            const jsFilePath = await compileJSX(filePath);
 
-            // Convert markdown to HTML with custom parsing
-            const htmlContent = md.render(content);
+            // Dynamically import the transpiled JS file (standard Node.js)
+            const { default: Component, metadata } = require(jsFilePath);
 
-            // Apply the template with content and metadata
+            // Render the JSX component to HTML
+            const renderedContent = Component();  // Execute the component to get its content
+
+            // Generate script tags for required components
+            let componentScripts = '';
+            if (metadata.components) {
+                componentScripts = metadata.components.map((src) => `<script src="${src}" defer></script>`).join('\n');
+            }
+
+            // Inject compiled JSX and the Web Component scripts into the template
             const finalHtml = template({
-                content: htmlContent,
-                ...data
+                title: metadata.title || 'Untitled',
+                content: renderedContent,  // Inject the rendered JSX output
+                componentScripts           // Inject Web Component scripts
             });
 
             // Write the final HTML file to the output directory
-            const outputFileName = file.replace('.md', '.html');
+            const outputFileName = file.replace('.jsx', '.html');
             await fs.outputFile(path.join(outputDir, outputFileName), finalHtml);
 
             console.log(`Generated: ${outputFileName}`);
+
+            // Clean up: Optionally remove the transpiled JS file if you don't want to keep it
+            await fs.remove(jsFilePath);
         }
     }
 }
 
 // Copy static assets (CSS, images, JS, etc.) to the build folder
 async function copyStaticAssets() {
+    const staticDir = path.join(__dirname, 'static');
     await fs.copy(staticDir, outputDir);  // Copies all files in static/ to build/
     console.log("Static assets copied to build folder.");
 }
@@ -107,8 +91,8 @@ async function buildSite() {
     await fs.ensureDir(outputDir);  // Ensure the build directory exists
 
     const template = await loadTemplate();  // Load the Handlebars template
-    await processMarkdownFiles(template);   // Process markdown files
-    await copyStaticAssets();               // Copy static assets like CSS
+    await processJSXFiles(template);        // Process JSX files and generate HTML
+    await copyStaticAssets();               // Copy static assets like CSS and JS
 }
 
 // Execute the build process

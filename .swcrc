@@ -1,0 +1,17 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "ecmascript",
+      "jsx": true
+    },
+    "transform": {
+      "react": {
+        "runtime": "automatic", // This ensures it doesn’t assume React.
+        "importSource": ""      // We set this to avoid importing any library.
+      }
+    }
+  },
+  "module": {
+    "type": "commonjs"
+  }
+}
