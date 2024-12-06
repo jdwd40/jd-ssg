@@ -1,7 +1,6 @@
 /* Import Montserrat and Roboto from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;500&display=swap');
 
-
 /* Global Dark Mode Styles */
 body {
     background-color: #121212;
@@ -11,19 +10,22 @@ body {
     padding: 0;
 }
 
-/* center content */
+/* Center content and add margins */
 .container {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 20px auto; /* Add top margin */
     padding: 20px;
+    padding-left: 40px; /* Add left margin */
 }
 
+/* Headings styles */
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Montserrat', sans-serif; /* Set Montserrat for headings */
-    color: #e0e0e0;
+    color: #00ccff !important; /* Set color for all headings and use !important to override other styles */
     font-weight: 700; /* Bold headings */
     margin: 0 0 20px 0;
 }
+
 
 p {
     font-family: 'Roboto', sans-serif; /* Set Roboto for paragraphs */
@@ -39,6 +41,32 @@ a {
 a:hover {
     color: #00ccff;
 }
+
+/* Bold text styles */
+.text-bold, b, strong {
+    font-weight: 700; /* Make bold text more prominent */
+    color: #6ca6e7; /* Make bold text clearer */
+}
+
+/* Additional styles for other elements */
+.text-italic {
+    font-style: italic;
+}
+
+/* Ordered list styles */
+ol {
+    line-height: 1.4; /* Increase line spacing for ordered lists */
+}
+
+ol li {
+    margin-bottom: 5px; /* Add space between list items */
+}
+
+/*List styles */
+ul {
+    line-height: 1.4; /* Increase line spacing for unordered lists */
+}
+
 /* Navbar Styles */
 .navbar {
     background-color: #1e1e1e;
@@ -119,7 +147,7 @@ a:hover {
     }
 
     .navbar-links li {
-        margin: 15px 0;
+        margin: 10px 0;
     }
 }
 
@@ -131,10 +159,6 @@ a:hover {
     margin: 20px 0;
 }
 
-/* Other Global Styles */
-h1, h2, h3, h4, h5, h6 {
-    color: #e0e0e0;
-}
 
 a {
     color: #00aaff;
@@ -144,12 +168,10 @@ a:hover {
     color: #00ccff;
 }
 
-
 /* Box sizes */
 .box-small {
     width: 200px;
     padding: 10px;
-    
 }
 
 .box-medium {
@@ -170,18 +192,8 @@ a:hover {
 
 .text-medium {
     font-size: 16px;
-    
 }
 
 .text-large {
     font-size: 24px;
-}
-
-/* Text styles */
-.text-bold {
-    font-weight: bold;
-}
-
-.text-italic {
-    font-style: italic;
 }

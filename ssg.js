@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const swc = require('@swc/core');
 const handlebars = require('handlebars');
+const { marked } = require('marked');
 
 // Directory paths
 const contentDir = path.join(__dirname, 'content');
@@ -37,63 +38,120 @@ async function compileJSX(filePath) {
     return jsFilePath;
 }
 
-// Process JSX files
-async function processJSXFiles(template) {
-    const files = await fs.readdir(contentDir);
+// Normalize filenames by converting to lowercase and removing spaces
+function normalizeFilename(filename) {
+    return filename.toLowerCase().replace(/\s+/g, '');
+}
+
+// Generate Navbar HTML
+function generateNavbar(folders) {
+    let navbar = '<nav class="navbar"><ul class="navbar-links">';
+    folders.forEach(folder => {
+        const normalizedFolder = normalizeFilename(folder);
+        navbar += `<li class="navbar-item"><a href="/${normalizedFolder}/index.html">${normalizedFolder}</a></li>`;
+    });
+    navbar += '</ul></nav>';
+    return navbar;
+}
+
+// Recursively process files in the content directory
+async function processFiles(template, dir = contentDir, folders = []) {
+    const files = await fs.readdir(dir);
 
     for (const file of files) {
-        if (file.endsWith('.jsx')) {
-            const filePath = path.join(contentDir, file);
+        const filePath = path.join(dir, file);
+        const stat = await fs.stat(filePath);
 
-            // Compile the JSX to JavaScript and get the new JS file path
+        if (stat.isDirectory()) {
+            folders.push(file);
+            await processFiles(template, filePath, folders);
+        } else if (file.endsWith('.jsx')) {
             const jsFilePath = await compileJSX(filePath);
-
-            // Dynamically import the transpiled JS file (standard Node.js)
             const { default: Component, metadata } = require(jsFilePath);
-
-            // Render the JSX component to HTML
-            const renderedContent = Component();  // Execute the component to get its content
-
-            // Generate script tags for required components
-            let componentScripts = '';
-            if (metadata.components) {
-                componentScripts = metadata.components.map((src) => `<script src="${src}" defer></script>`).join('\n');
-            }
-
-            // Inject compiled JSX and the Web Component scripts into the template
+            const renderedContent = Component();
+            const componentScripts = metadata.components ? metadata.components.map(src => `<script src="${src}" defer></script>`).join('\n') : '';
             const finalHtml = template({
                 title: metadata.title || 'Untitled',
-                content: renderedContent,  // Inject the rendered JSX output
-                componentScripts           // Inject Web Component scripts
+                content: renderedContent,
+                componentScripts,
+                navbar: generateNavbar(folders)
             });
-
-            // Write the final HTML file to the output directory
-            const outputFileName = file.replace('.jsx', '.html');
-            await fs.outputFile(path.join(outputDir, outputFileName), finalHtml);
-
-            console.log(`Generated: ${outputFileName}`);
-
-            // Clean up: Optionally remove the transpiled JS file if you don't want to keep it
+            const relativePath = path.relative(contentDir, filePath);
+            const normalizedPath = normalizeFilename(relativePath.replace('.jsx', '.html'));
+            await fs.outputFile(path.join(outputDir, normalizedPath), finalHtml);
+            console.log(`Generated: ${normalizedPath}`);
             await fs.remove(jsFilePath);
+        } else if (file.endsWith('.md')) {
+            const markdownContent = await fs.readFile(filePath, 'utf-8');
+            const renderedContent = marked(markdownContent);
+            const finalHtml = template({
+                title: 'Untitled',
+                content: renderedContent,
+                componentScripts: '',
+                navbar: generateNavbar(folders)
+            });
+            const relativePath = path.relative(contentDir, filePath);
+            const normalizedPath = normalizeFilename(relativePath.replace('.md', '.html'));
+            await fs.outputFile(path.join(outputDir, normalizedPath), finalHtml);
+            console.log(`Generated: ${normalizedPath}`);
         }
+    }
+}
+
+// Generate Index Page
+async function generateIndexPage(template, folders) {
+    const content = '<h1>Welcome to the Home Page</h1><p>This is the home page generated using JSX and custom Web Components.</p>';
+    const finalHtml = template({
+        title: 'Home Page',
+        content,
+        componentScripts: '',
+        navbar: generateNavbar(folders)
+    });
+    await fs.outputFile(path.join(outputDir, 'index.html'), finalHtml);
+    console.log('Generated: index.html');
+}
+
+// Generate Folder Pages
+async function generateFolderPages(template, folders) {
+    for (const folder of folders) {
+        const folderPath = path.join(contentDir, folder);
+        const files = await fs.readdir(folderPath);
+        let content = `<h1>${folder}</h1><ul>`;
+        files.forEach(file => {
+            const fileName = normalizeFilename(file.replace('.md', '.html').replace('.jsx', '.html'));
+            const normalizedFolder = normalizeFilename(folder);
+            content += `<li><a href="/${normalizedFolder}/${fileName}">${fileName}</a></li>`;
+        });
+        content += '</ul>';
+        const finalHtml = template({
+            title: folder,
+            content,
+            componentScripts: '',
+            navbar: generateNavbar(folders)
+        });
+        const normalizedFolder = normalizeFilename(folder);
+        await fs.outputFile(path.join(outputDir, normalizedFolder, 'index.html'), finalHtml);
+        console.log(`Generated: ${normalizedFolder}/index.html`);
     }
 }
 
 // Copy static assets (CSS, images, JS, etc.) to the build folder
 async function copyStaticAssets() {
     const staticDir = path.join(__dirname, 'static');
-    await fs.copy(staticDir, outputDir);  // Copies all files in static/ to build/
+    await fs.copy(staticDir, outputDir);
     console.log("Static assets copied to build folder.");
 }
 
 // Main function to build the site
 async function buildSite() {
-    await fs.ensureDir(outputDir);  // Ensure the build directory exists
-
-    const template = await loadTemplate();  // Load the Handlebars template
-    await processJSXFiles(template);        // Process JSX files and generate HTML
-    await copyStaticAssets();               // Copy static assets like CSS and JS
+    await fs.ensureDir(outputDir);
+    const template = await loadTemplate();
+    const folders = [];
+    await processFiles(template, contentDir, folders);
+    await generateIndexPage(template, folders);
+    await generateFolderPages(template, folders);
+    await copyStaticAssets();
 }
 
 // Execute the build process
-buildSite().catch((err) => console.error(err));
+buildSite().catch(err => console.error(err));

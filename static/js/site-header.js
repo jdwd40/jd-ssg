@@ -20,8 +20,8 @@ class SiteHeader extends HTMLElement {
         <header>
           <nav>
             <a href="/">Home</a>
-            <a href="/about">About</a>
-            <a href="/contact">Contact</a>
+            <a href="/about.html">About</a>
+            <a href="/contact.html">Contact</a>
           </nav>
         </header>
       `;
